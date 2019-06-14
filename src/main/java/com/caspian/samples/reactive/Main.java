@@ -4,9 +4,11 @@ import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
 
 import java.math.BigInteger;
+import java.util.concurrent.TimeUnit;
 
 import static java.math.BigInteger.ONE;
 import static java.math.BigInteger.ZERO;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * @author Mostafa Kalantar (kalantar@caspco.ir)
@@ -18,24 +20,34 @@ public final class Main {
     System.out.printf("[%s]: %s\n", Thread.currentThread().getName(), msg);
   }
 
-  public static void main(String... args) throws InterruptedException {
-    Observable<BigInteger> naturalNumbers =
-        Observable.create(emitter -> {
+  private static void sleep(int timeout, TimeUnit unit) {
+    try {
+      unit.sleep(timeout);
+    } catch (InterruptedException ignored) {
+      //intentionally ignored
+    }
+  }
+
+  private static <T> Observable<T> delayed(T x) {
+    return Observable.create(emitter -> {
           Runnable r = () -> {
-            BigInteger i = ZERO;
-            while (!emitter.isDisposed()) {
-              emitter.onNext(i);
-              i = i.add(ONE);
+            sleep(10, SECONDS);
+            if (!emitter.isDisposed()) {
+              emitter.onNext(x);
+              emitter.onComplete();
             }
           };
           new Thread(r).start();
         });
+  }
 
-    final Disposable disposable = naturalNumbers.subscribe(Main::log);
+  public static void main(String... args) throws InterruptedException {
+
+    final Disposable disposable = delayed(10).subscribe(Main::log);
 
     System.out.println("After Subscribe");
 
-    Thread.sleep(100);
+    sleep(1, SECONDS);
 
     disposable.dispose();
   }
