@@ -9,18 +9,22 @@ import io.reactivex.Observable;
  */
 public final class Main {
   public static void main(String... args) {
-    Observable
-        .create(emitter -> new Thread(() -> {
-          emitter.onNext(1);
-          emitter.onNext(2);
-          emitter.onNext(3);
-          emitter.onNext(4);
-          emitter.onNext(5);
-          emitter.onComplete();
-        }).start())
-        .doOnNext(i -> System.out.println(Thread.currentThread().getName()))
-        .map(i -> "Value " + i + " processed on " + Thread.currentThread().getName())
-        .subscribe(System.out::println);
-    System.out.println("Will be run on thread '" +  Thread.currentThread().getName() + "' and print BEFORE values are emitted");
+    Observable<String> a = Observable.create(s -> {
+      new Thread(() -> {
+        s.onNext("one");
+        s.onNext("two");
+        s.onComplete();
+      }).start();
+    });
+    Observable<String> b = Observable.create(s -> {
+      new Thread(() -> {
+        s.onNext("three");
+        s.onNext("four");
+        s.onComplete();
+      }).start();
+    });
+    // this subscribes to a and b concurrently,
+    // and merges into a third sequential stream
+    Observable.merge(a, b).subscribe(System.out::println);
   }
 }
