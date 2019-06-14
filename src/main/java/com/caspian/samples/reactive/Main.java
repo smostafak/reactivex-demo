@@ -2,12 +2,10 @@ package com.caspian.samples.reactive;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.disposables.Disposables;
 
-import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
 
-import static java.math.BigInteger.ONE;
-import static java.math.BigInteger.ZERO;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -24,25 +22,27 @@ public final class Main {
     try {
       unit.sleep(timeout);
     } catch (InterruptedException ignored) {
-      //intentionally ignored
+      System.out.println("InterruptedException");
     }
   }
 
-  private static <T> Observable<T> delayed(T x) {
-    return Observable.create(emitter -> {
+  static <T> Observable<T> delayed(T x) {
+    return Observable.create(
+        subscriber -> {
           Runnable r = () -> {
             sleep(10, SECONDS);
-            if (!emitter.isDisposed()) {
-              emitter.onNext(x);
-              emitter.onComplete();
+            if (!subscriber.isDisposed()) {
+              subscriber.onNext(x);
+              subscriber.onComplete();
             }
           };
-          new Thread(r).start();
+          final Thread thread = new Thread(r);
+          thread.start();
+          subscriber.setDisposable(Disposables.fromAction(thread::interrupt));
         });
   }
 
-  public static void main(String... args) throws InterruptedException {
-
+  public static void main(String... args) {
     final Disposable disposable = delayed(10).subscribe(Main::log);
 
     System.out.println("After Subscribe");
