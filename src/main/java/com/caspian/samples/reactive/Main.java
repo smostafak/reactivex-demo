@@ -1,8 +1,6 @@
 package com.caspian.samples.reactive;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
 
 /**
  * @author Mostafa Kalantar (kalantar@caspco.ir)
@@ -11,26 +9,20 @@ import io.reactivex.ObservableOnSubscribe;
  */
 public final class Main {
   private static void log(Object msg) {
-    System.out.println(
-        Thread.currentThread().getName() +
-        ": " + msg);
+    System.out.printf("[%s]: %s\n", Thread.currentThread().getName(), msg);
   }
 
   public static void main(String... args) {
-    Observable<Integer> ints = Observable.create(new ObservableOnSubscribe<Integer>() {
-      @Override
-      public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
-        log("Create");
-        emitter.onNext(5);
-        emitter.onNext(6);
-        emitter.onNext(7);
-        emitter.onComplete();
-        log("Completed");
-      }
-    });
-
+    Observable<Integer> ints =
+        Observable.create(emitter -> {
+              log("Create");
+              emitter.onNext(42);
+              emitter.onComplete();
+            }
+        );
     log("Starting");
-    ints.subscribe(i -> log("Element: " + i));
+    ints.subscribe(i -> log("Element A: " + i));
+    ints.subscribe(i -> log("Element B: " + i));
     log("Exit");
   }
 }
