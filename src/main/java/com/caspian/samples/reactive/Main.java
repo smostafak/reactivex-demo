@@ -14,12 +14,13 @@ public final class Main {
 
   public static void main(String... args) {
     Observable<Integer> ints =
-        Observable.create(emitter -> {
-              log("Create");
-              emitter.onNext(42);
-              emitter.onComplete();
-            }
-        );
+        Observable
+            .<Integer>create(emitter -> {
+                  log("Create");
+                  emitter.onNext(42);
+                  emitter.onComplete();
+                })
+            .cache();
     log("Starting");
     ints.subscribe(i -> log("Element A: " + i));
     ints.subscribe(i -> log("Element B: " + i));
