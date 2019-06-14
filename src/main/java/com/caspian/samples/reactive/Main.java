@@ -10,21 +10,14 @@ import io.reactivex.Observable;
 public final class Main {
   public static void main(String... args) {
     Observable<String> a = Observable.create(s -> {
-      new Thread(() -> {
-        s.onNext("one");
-        s.onNext("two");
-        s.onComplete();
-      }).start();
+      s.onNext("one");
+      s.onNext("two");
+      s.onNext("three");
+      s.onNext("four");
+      s.onComplete();
     });
-    Observable<String> b = Observable.create(s -> {
-      new Thread(() -> {
-        s.onNext("three");
-        s.onNext("four");
-        s.onComplete();
-      }).start();
-    });
-    // this subscribes to a and b concurrently,
-    // and merges into a third sequential stream
-    Observable.merge(a, b).subscribe(System.out::println);
+
+    a.subscribe(System.out::println);
+    a.subscribe(System.out::println);
   }
 }
