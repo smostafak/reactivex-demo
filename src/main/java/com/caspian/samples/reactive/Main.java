@@ -1,6 +1,7 @@
 package com.caspian.samples.reactive;
 
 import io.reactivex.Observable;
+import io.reactivex.disposables.Disposable;
 
 import java.math.BigInteger;
 
@@ -17,18 +18,25 @@ public final class Main {
     System.out.printf("[%s]: %s\n", Thread.currentThread().getName(), msg);
   }
 
-  public static void main(String... args) {
-    // BROKEN! Don't do this
+  public static void main(String... args) throws InterruptedException {
     Observable<BigInteger> naturalNumbers =
-        Observable.create(
-            emitter -> {
-              BigInteger i = ZERO;
-              while (true) { // don't do this!
-                emitter.onNext(i);
-                i = i.add(ONE);
-              }
-            });
-    naturalNumbers.subscribe(Main::log);
+        Observable.create(emitter -> {
+          Runnable r = () -> {
+            BigInteger i = ZERO;
+            while (!emitter.isDisposed()) {
+              emitter.onNext(i);
+              i = i.add(ONE);
+            }
+          };
+          new Thread(r).start();
+        });
+
+    final Disposable disposable = naturalNumbers.subscribe(Main::log);
+
     System.out.println("After Subscribe");
+
+    Thread.sleep(100);
+
+    disposable.dispose();
   }
 }
