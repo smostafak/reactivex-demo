@@ -2,6 +2,11 @@ package com.caspian.samples.reactive;
 
 import io.reactivex.Observable;
 
+import java.math.BigInteger;
+
+import static java.math.BigInteger.ONE;
+import static java.math.BigInteger.ZERO;
+
 /**
  * @author Mostafa Kalantar (kalantar@caspco.ir)
  * @version 1.0 2019.0613
@@ -13,17 +18,17 @@ public final class Main {
   }
 
   public static void main(String... args) {
-    Observable<Integer> ints =
-        Observable
-            .<Integer>create(emitter -> {
-                  log("Create");
-                  emitter.onNext(42);
-                  emitter.onComplete();
-                })
-            .cache();
-    log("Starting");
-    ints.subscribe(i -> log("Element A: " + i));
-    ints.subscribe(i -> log("Element B: " + i));
-    log("Exit");
+    // BROKEN! Don't do this
+    Observable<BigInteger> naturalNumbers =
+        Observable.create(
+            emitter -> {
+              BigInteger i = ZERO;
+              while (true) { // don't do this!
+                emitter.onNext(i);
+                i = i.add(ONE);
+              }
+            });
+    naturalNumbers.subscribe(Main::log);
+    System.out.println("After Subscribe");
   }
 }
