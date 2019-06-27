@@ -8,14 +8,27 @@ import io.reactivex.Observable;
  * @since 1.0
  */
 public final class Main {
-  public static void main(String... args) {
-    // Create reactive stream which emits only one element
-    final Observable<Object> stream = Observable.create(emitter -> {
-      emitter.onNext("Hello world");
-      emitter.onComplete();
-    });
+  private static Integer load(int id) {
+    if (id == 1) {
+      throw new IllegalStateException();
+    }
+    
+    return id + 1;
+  }
 
-    // Subscribe to the reactive stream and println each element as it is emitted
-    stream.subscribe(System.out::println);
+  static Observable<Integer> rxLoad(int id) {
+    return Observable.create(emitter -> {
+      try {
+        emitter.onNext(load(id));
+        emitter.onComplete();
+      } catch (Exception e) {
+        emitter.onError(e);
+      }
+    });
+  }
+
+  public static void main(String... args) {
+    rxLoad(2).subscribe(System.out::println);
+    rxLoad(1).subscribe(System.out::println);
   }
 }
