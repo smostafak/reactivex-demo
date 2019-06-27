@@ -2,7 +2,7 @@ package com.caspian.samples.reactive;
 
 import io.reactivex.Observable;
 
-import java.util.concurrent.TimeUnit;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
  * @author Mostafa Kalantar (kalantar@caspco.ir)
@@ -11,12 +11,12 @@ import java.util.concurrent.TimeUnit;
  */
 public final class Main {
   private static void log(Object msg) {
-    System.out.println(Thread.currentThread().getName() + ": " + msg);
+    System.out.println(System.currentTimeMillis() + " "+ Thread.currentThread().getName() + ": " + msg);
   }
 
   public static void main(String... args) throws InterruptedException {
     Observable
-        .timer(1, TimeUnit.SECONDS)       // an asynchronous equivalent of Thread.sleep().
+        .interval(1_000_000 / 60, MICROSECONDS)
         .subscribe(Main::log);
 
     Thread.currentThread().join(2000);
