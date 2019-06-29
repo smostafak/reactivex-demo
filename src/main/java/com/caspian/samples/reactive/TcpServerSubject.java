@@ -4,37 +4,20 @@ import com.caspian.ps.net.Connection;
 import com.caspian.ps.net.TcpHandler;
 import com.caspian.ps.net.server.TcpServer;
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.disposables.Disposables;
+import io.reactivex.subjects.PublishSubject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * @author Mostafa Kalantar (kalantar@caspco.ir)
  * @version 1.0 2019.0629
  * @since 1.0
  */
-public final class LazyTcpServerObservable {
-  private static final Logger log = LoggerFactory.getLogger(LazyTcpServerObservable.class);
+public final class TcpServerSubject {
+  private static final Logger log = LoggerFactory.getLogger(TcpServerSubject.class);
 
   private TcpServer server;
-  private Observable<String> observable;
-  private final Set<ObservableEmitter<? super String>> subscribers = new CopyOnWriteArraySet<>();
-
-  private synchronized void register(ObservableEmitter<? super String> subscriber) {
-    subscribers.add(subscriber);
-  }
-
-  private synchronized void deregister(ObservableEmitter<? super String> subscriber) throws IOException {
-    subscribers.remove(subscriber);
-    if (subscribers.isEmpty()) {
-      server.stop();
-    }
-  }
+  private final PublishSubject<String> subject = PublishSubject.create();
 
   private void startTcpServer() throws Exception {
     server = new TcpServer(8033, new TcpHandler() {
@@ -49,33 +32,27 @@ public final class LazyTcpServerObservable {
 //      log.info(">>> SERVER: Read '{}'", text);
         connection.write(String.valueOf(message.length).getBytes());
 
-        subscribers.forEach(s -> s.onNext(text));
+        subject.onNext(text);
       }
 
       @Override
       public void onFail(Exception e) throws Exception {
         e.printStackTrace();
-        subscribers.forEach(s -> s.onError(e));
+        subject.onError(e);
       }
     });
     server.start();
   }
 
-  Observable<String> observe() { return observable; }
+  Observable<String> observe() { return subject; }
 
   private void run() throws Exception {
-    observable =
-        Observable.create(
-            emitter -> {
-              register(emitter);
-              emitter.setDisposable(Disposables.fromAction(() -> this.deregister(emitter)));
-            });
     observe().subscribe(log::info);
     observe().subscribe(log::warn);
     startTcpServer();
   }
 
   public static void main(String... args) throws Exception {
-    new LazyTcpServerObservable().run();
+    new TcpServerSubject().run();
   }
 }
