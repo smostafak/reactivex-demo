@@ -23,19 +23,15 @@ public final class LazyTcpServerObservable {
 
   private TcpServer server;
   private Observable<String> observable;
-  private final Set<ObservableEmitter<? super String>> emitters;
-
-  private LazyTcpServerObservable() throws Exception {
-    emitters = new CopyOnWriteArraySet<>();
-  }
+  private final Set<ObservableEmitter<? super String>> subscribers = new CopyOnWriteArraySet<>();
 
   private synchronized void register(ObservableEmitter<? super String> subscriber) {
-    emitters.add(subscriber);
+    subscribers.add(subscriber);
   }
 
   private synchronized void deregister(ObservableEmitter<? super String> subscriber) throws IOException {
-    emitters.remove(subscriber);
-    if (emitters.isEmpty()) {
+    subscribers.remove(subscriber);
+    if (subscribers.isEmpty()) {
       server.stop();
     }
   }
@@ -53,18 +49,13 @@ public final class LazyTcpServerObservable {
 //      log.info(">>> SERVER: Read '{}'", text);
         connection.write(String.valueOf(message.length).getBytes());
 
-        emitters.forEach(s -> s.onNext(text));
-      }
-
-      @Override
-      public void onWrite(Connection connection) throws Exception {
+        subscribers.forEach(s -> s.onNext(text));
       }
 
       @Override
       public void onFail(Exception e) throws Exception {
         e.printStackTrace();
-
-        emitters.forEach(s -> s.onError(e));
+        subscribers.forEach(s -> s.onError(e));
       }
     });
     server.start();
