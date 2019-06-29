@@ -1,8 +1,11 @@
 package com.caspian.samples.reactive;
 
-import io.reactivex.Observable;
 
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import com.caspian.ps.net.server.TcpServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.caspian.ps.net.Connection;
+import com.caspian.ps.net.TcpHandler;
 
 /**
  * @author Mostafa Kalantar (kalantar@caspco.ir)
@@ -10,15 +13,29 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
  * @since 1.0
  */
 public final class Main {
-  private static void log(Object msg) {
-    System.out.println(System.currentTimeMillis() + " "+ Thread.currentThread().getName() + ": " + msg);
-  }
+  private static final Logger log = LoggerFactory.getLogger(Main.class);
 
-  public static void main(String... args) throws InterruptedException {
-    Observable
-        .interval(1_000_000 / 60, MICROSECONDS)
-        .subscribe(Main::log);
+  public static void main(String... args) throws Exception {
+    new TcpServer(8033, new TcpHandler() {
+         @Override
+         public void onOpen(Connection connection) throws Exception {
+           System.out.println(">>> SERVER: Open");
+         }
 
-    Thread.currentThread().join(2000);
+         @Override
+         public void onRead(byte[] message, Connection connection) throws Exception {
+           System.out.println(">>> SERVER: Read");
+           System.out.println(new String(message));
+           connection.write(String.valueOf(message.length).getBytes());
+         }
+
+         @Override
+         public void onWrite(Connection connection) throws Exception {
+         }
+
+         @Override
+         public void onFail(Exception e) throws Exception {
+         }
+       }).start();
   }
 }
