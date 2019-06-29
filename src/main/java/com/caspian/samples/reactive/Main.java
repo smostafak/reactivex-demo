@@ -24,8 +24,7 @@ public final class Main {
 
          @Override
          public void onRead(byte[] message, Connection connection) throws Exception {
-           System.out.println(">>> SERVER: Read");
-           System.out.println(new String(message));
+           System.out.println(">>> SERVER: Read '" + new String(message) + "'");
            connection.write(String.valueOf(message.length).getBytes());
          }
 
@@ -35,7 +34,11 @@ public final class Main {
 
          @Override
          public void onFail(Exception e) throws Exception {
+           e.printStackTrace();
          }
-       }).start();
+       })
+        .start();
+
+    Thread.currentThread().join();
   }
 }
