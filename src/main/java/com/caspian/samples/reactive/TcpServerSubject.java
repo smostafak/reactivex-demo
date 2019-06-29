@@ -47,8 +47,9 @@ public final class TcpServerSubject {
   Observable<String> observe() { return subject; }
 
   private void run() throws Exception {
-    observe().subscribe(log::info);
-    observe().subscribe(log::warn);
+    final Observable<String> lazy = observe().publish().refCount();
+    lazy.subscribe(log::info);
+    lazy.subscribe(log::warn);
     startTcpServer();
   }
 
